@@ -3,15 +3,6 @@ package zdmproxy
 import (
 	"context"
 	"fmt"
-	"github.com/datastax/go-cassandra-native-protocol/frame"
-	"github.com/datastax/go-cassandra-native-protocol/message"
-	"github.com/datastax/go-cassandra-native-protocol/primitive"
-	"github.com/datastax/zdm-proxy/proxy/pkg/common"
-	"github.com/datastax/zdm-proxy/proxy/pkg/config"
-	"github.com/datastax/zdm-proxy/proxy/pkg/metrics"
-	"github.com/google/uuid"
-	"github.com/jpillora/backoff"
-	log "github.com/sirupsen/logrus"
 	"math"
 	"math/big"
 	"math/rand"
@@ -21,6 +12,16 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/datastax/go-cassandra-native-protocol/frame"
+	"github.com/datastax/go-cassandra-native-protocol/message"
+	"github.com/datastax/go-cassandra-native-protocol/primitive"
+	"github.com/datastax/zdm-proxy/proxy/pkg/common"
+	"github.com/datastax/zdm-proxy/proxy/pkg/config"
+	"github.com/datastax/zdm-proxy/proxy/pkg/metrics"
+	"github.com/google/uuid"
+	"github.com/jpillora/backoff"
+	log "github.com/sirupsen/logrus"
 )
 
 type ControlConn struct {
@@ -431,12 +432,16 @@ func (cc *ControlConn) RefreshHosts(conn CqlConnection, ctx context.Context) ([]
 			}
 		}
 	}
-
-	oldLocalhost, localHostExists := hostsById[localHost.HostId]
-	if localHostExists {
-		log.Warnf("Local host is also on the peers list: %v vs %v, ignoring the former one.", oldLocalhost, localHost)
+	if localHost.Address.IsLoopback() {
+		log.Warnf("Ignoring local system entry because it is using a loopback address.")
+	} else {
+		oldLocalhost, localHostExists := hostsById[localHost.HostId]
+		if localHostExists {
+			log.Warnf("Local host is also on the peers list: %v vs %v, ignoring the former one.", oldLocalhost, localHost)
+		}
+		hostsById[localHost.HostId] = localHost
 	}
-	hostsById[localHost.HostId] = localHost
+
 	orderedLocalHosts := make([]*Host, 0, len(hostsById))
 	for _, h := range hostsById {
 		orderedLocalHosts = append(orderedLocalHosts, h)

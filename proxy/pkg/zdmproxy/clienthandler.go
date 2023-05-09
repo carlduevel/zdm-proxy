@@ -1882,7 +1882,7 @@ func (ch *ClientHandler) aggregateAndTrackResponses(
 
 	proxyMetrics := ch.metricHandler.GetProxyMetrics()
 	if !isResponseSuccessful(responseFromOriginCassandra) && !isResponseSuccessful(responseFromTargetCassandra) {
-		log.Debugf("Aggregated response: both failures, sending back %v response with opcode %d",
+		log.Warnf("Aggregated response: both failures, sending back %v response with opcode %d",
 			common.ClusterTypeOrigin, originOpCode)
 		if requestInfo.ShouldBeTrackedInMetrics() {
 			proxyMetrics.FailedWritesOnBoth.Add(1)
@@ -1892,14 +1892,14 @@ func (ch *ClientHandler) aggregateAndTrackResponses(
 
 	// if either response is a failure, the failure "wins" --> return the failed response
 	if !isResponseSuccessful(responseFromOriginCassandra) {
-		log.Debugf("Aggregated response: failure only on %v, sending back %v response with opcode %d",
+		log.Warnf("Aggregated response: failure only on %v, sending back %v response with opcode %d",
 			common.ClusterTypeOrigin, common.ClusterTypeOrigin, originOpCode)
 		if requestInfo.ShouldBeTrackedInMetrics() {
 			proxyMetrics.FailedWritesOnOrigin.Add(1)
 		}
 		return responseFromOriginCassandra, common.ClusterTypeOrigin
 	} else {
-		log.Debugf("Aggregated response: failure only on %v, sending back %v response with opcode %d",
+		log.Warnf("Aggregated response: failure only on %v, sending back %v response with opcode %d",
 			common.ClusterTypeTarget, common.ClusterTypeTarget, originOpCode)
 		if requestInfo.ShouldBeTrackedInMetrics() {
 			proxyMetrics.FailedWritesOnTarget.Add(1)

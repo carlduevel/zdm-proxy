@@ -1904,7 +1904,7 @@ func (ch *ClientHandler) aggregateAndTrackResponses(
 		if requestInfo.ShouldBeTrackedInMetrics() {
 			proxyMetrics.FailedWritesOnTarget.Add(1)
 		}
-		return responseFromTargetCassandra, common.ClusterTypeTarget
+		return responseFromOriginCassandra, common.ClusterTypeOrigin
 	}
 }
 
